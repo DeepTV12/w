@@ -3,7 +3,6 @@ import pyfiglet
 from colorama import Fore, Style, init
 import json
 import requests
-import time 
 from urllib.parse import urlparse, parse_qs
 from user_agent import generate_user_agent
 
@@ -28,7 +27,7 @@ headers = {
 
 init(autoreset=True)
 
-def main_wcoin(session ,amount):
+def main_wcoin(session, amount):
     parsed_url = urlparse(session)
     query_params = parse_qs(parsed_url.fragment)
     tgWebAppData = query_params.get('tgWebAppData', [None])[0]
@@ -39,9 +38,21 @@ def main_wcoin(session ,amount):
             'identifier': identifier,
             'password': identifier,
         }
-    res = requests.post('https://starfish-app-fknmx.ondigitalocean.app/wapi/api/auth/local', json=json_data).json()
-    r = requests.post('http://213.218.240.167:5000/private', json={'initData': session, 'serverData': res, 'amount': amount})
-    return (r.json())
+
+    try:
+        # Authenticate the user
+        res = requests.post('https://starfish-app-fknmx.ondigitalocean.app/wapi/api/auth/local', json=json_data).json()
+        
+        # Perform the main request to get the Wcoin data
+        # Removing 'key' parameter from the request
+        r = requests.post('http://213.218.240.167:5000/private', json={'initData': session, 'serverData': res, 'amount': amount})
+        
+        # Return the JSON response
+        return r.json()
+    except requests.exceptions.RequestException as e:
+        print(Fore.RED + Style.BRIGHT + "An error occurred while fetching data.")
+        print(e)
+        return {'error': 'Request error occurred'}
 
 def create_gradient_banner(text):
     banner = pyfiglet.figlet_format(text, font='slant').splitlines()
@@ -76,16 +87,19 @@ if __name__ == "__main__":
         ("CryptoNews", "@ethcryptopia"),
         ("Auto Farming", "@whywetap"),
         ("Auto Farming", "@autominerx"),
-        #("", "@"),
         ("Coder", "@demoncratos"),
     ]
     
     print_info_box(social_media_usernames)
     user_input = input("\nEnter Wcoin Session : ")
     balance_input = input("Enter Coin Amount : ")
+    
+    # The key input and passing have been removed
     data = main_wcoin(user_input, int(balance_input))
+    
     os.system('cls' if os.name == 'nt' else 'clear')
     create_gradient_banner('Done')
+    
     try:
         print(Fore.GREEN + Style.BRIGHT + "=== User Information ===")
         print(Fore.YELLOW + f"Username: {data['username']}")
